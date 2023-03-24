@@ -10,7 +10,11 @@ Discord bot written in Golang that interacts with the ChatGPT API
 ## Usage
 
 ```shell
-$ go run main.go 
+# build a go binary
+$ make
+
+# for local development
+$ make run 
 ```
 
 ## Contributing
