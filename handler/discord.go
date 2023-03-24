@@ -6,10 +6,16 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rayspock/go-chatgpt-discord/provider"
 	log "github.com/sirupsen/logrus"
+	"io"
+	"strings"
 )
 
 const (
-	ApplicationCommandChat = "chat"
+	ApplicationCommandChat string = "chat"
+)
+
+const (
+	MaxMessageLength int = 2000
 )
 
 type DiscordHandler struct {
@@ -58,6 +64,7 @@ func (h *DiscordHandler) GetInteractionCreateHandler() func(s *discordgo.Session
 				author = i.Member.User.ID
 			}
 		}
+		// reformat user's message and append to response
 		response := getUserMessage(content, author)
 
 		// If we don't send a response in 3 seconds, the error 'The application did not respond' will appear.
@@ -88,20 +95,28 @@ func (h *DiscordHandler) GetInteractionCreateHandler() func(s *discordgo.Session
 			return
 		}
 
-		//log.Tracef("received message: %v", resp.Content)
-
 		response += resp.Content
-		_, err = s.InteractionResponseEdit(i.Interaction, &discordgo.WebhookEdit{
-			Content: &response,
-		})
-		if err != nil {
-			log.Errorf("failed to edit response: %v", err)
-			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-				Content: "Something went wrong",
-			})
-			return
-		}
 
+		// split the response into chunks, as Discord has a limit on the length of messages sent.
+		reader := strings.NewReader(response)
+		// create buffer with specified limit of characters
+		buff := make([]byte, MaxMessageLength)
+	loop:
+		for {
+			n, err := io.ReadAtLeast(reader, buff, MaxMessageLength)
+			if n <= 0 {
+				if err != io.EOF {
+					log.Errorf("error reading message: %v", err)
+					s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+						Content: "Something went wrong",
+					})
+				}
+				break loop
+			}
+			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+				Content: string(buff[:n]),
+			})
+		}
 	}
 }
 
