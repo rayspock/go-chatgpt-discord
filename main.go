@@ -3,6 +3,7 @@ package main
 import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
+	"github.com/pkg/errors"
 	"github.com/rayspock/go-chatgpt-discord/handler"
 	"github.com/rayspock/go-chatgpt-discord/provider"
 	"github.com/rayspock/go-chatgpt-discord/ref"
@@ -34,7 +35,7 @@ func readConfig() config {
 func init() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("couldn't load .env file: %v", err)
+		panic(errors.Wrapf(err, "couldn't load .env file"))
 	}
 }
 
