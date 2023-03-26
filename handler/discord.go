@@ -6,8 +6,6 @@ import (
 	"github.com/bwmarrin/discordgo"
 	"github.com/rayspock/go-chatgpt-discord/provider"
 	log "github.com/sirupsen/logrus"
-	"io"
-	"strings"
 )
 
 const (
@@ -96,32 +94,22 @@ func (h *DiscordHandler) GetInteractionCreateHandler() func(s *discordgo.Session
 		}
 
 		response += resp.Content
-
 		// split the response into chunks, as Discord has a limit on the length of messages sent.
-		reader := strings.NewReader(response)
-		// create buffer with specified limit of characters
-		buff := make([]byte, MaxMessageLength)
-	loop:
-		for {
-			n, err := io.ReadAtLeast(reader, buff, MaxMessageLength)
-			if n <= 0 {
-				if err != io.EOF {
-					log.Errorf("error reading message: %v", err)
-					s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-						Content: "Something went wrong",
-					})
-				}
-				break loop
-			}
-			s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
-				Content: string(buff[:n]),
+		chunks := make(chan string)
+		go SendMessageByChunk(response, MaxMessageLength, chunks)
+		for chunk := range chunks {
+			_, err = s.FollowupMessageCreate(i.Interaction, true, &discordgo.WebhookParams{
+				Content: chunk,
 			})
+			if err != nil {
+				log.Errorf("creates the followup message for an interaction: %v", err)
+			}
 		}
 	}
 }
 
 func (h *DiscordHandler) GetMessageCreateHandler() func(s *discordgo.Session, m *discordgo.MessageCreate) {
 	return func(s *discordgo.Session, m *discordgo.MessageCreate) {
-		log.Tracef("in GetMessageCreateHandler, type:%v, content:%v", m.Type, m.Content)
+		//log.Tracef("in GetMessageCreateHandler, type:%v, content:%v", m.Type, m.Content)
 	}
 }
