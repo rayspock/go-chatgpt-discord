@@ -15,6 +15,9 @@ $ make
 
 # for local development
 $ make run 
+
+# run unit tests
+$ make test
 ```
 
 ## Contributing
