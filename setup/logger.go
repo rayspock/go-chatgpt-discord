@@ -10,5 +10,10 @@ func ConfigureLogger(config LogConfig) *log.Logger {
 		lvl = log.InfoLevel
 	}
 	log.SetLevel(lvl)
+
+	log.SetFormatter(&log.TextFormatter{
+		FullTimestamp: true,
+	})
+
 	return log.StandardLogger()
 }
