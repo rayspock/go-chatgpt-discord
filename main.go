@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/bwmarrin/discordgo"
 	"github.com/joho/godotenv"
 	"github.com/pkg/errors"
@@ -15,17 +16,19 @@ import (
 )
 
 type config struct {
-	openaiAPIKey string
-	openaiModel  string
-	botToken     string
-	logConfig    setup.LogConfig
+	openaiAPIKey    string
+	openaiModel     string
+	discordClientID string
+	botToken        string
+	logConfig       setup.LogConfig
 }
 
 func readConfig() config {
 	return config{
-		openaiModel:  os.Getenv("OPENAI_MODEL"),
-		openaiAPIKey: os.Getenv("OPENAI_API_KEY"),
-		botToken:     os.Getenv("DISCORD_BOT_TOKEN"),
+		openaiModel:     os.Getenv("OPENAI_MODEL"),
+		openaiAPIKey:    os.Getenv("OPENAI_API_KEY"),
+		discordClientID: os.Getenv("DISCORD_CLIENT_ID"),
+		botToken:        os.Getenv("DISCORD_BOT_TOKEN"),
 		logConfig: setup.LogConfig{
 			LogLevel: os.Getenv("LOG_LEVEL"),
 		},
@@ -88,6 +91,11 @@ func main() {
 		log.Fatalf("error opening connection: %v", err)
 		return
 	}
+
+	// show bot invite url
+	botInviteURL := fmt.Sprintf("https://discord.com/api/oauth2/authorize?client_id=%s&permissions=%s&scope=%s",
+		cfg.discordClientID, "328565073920", "bot")
+	log.Infof("invite bot to your server: %s", botInviteURL)
 
 	// wait here until ctrl-c or other term signal is received.
 	log.Info("bot is now running. press ctrl-c to exit.")
