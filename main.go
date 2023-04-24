@@ -42,6 +42,24 @@ func init() {
 	}
 }
 
+var (
+	commands = []*discordgo.ApplicationCommand{
+		{
+			Name:         handler.ApplicationCommandChat,
+			Description:  "Create a new thread for conversation.",
+			DMPermission: ref.Of(true),
+			Options: []*discordgo.ApplicationCommandOption{
+				{
+					Type:        discordgo.ApplicationCommandOptionString,
+					Name:        "messages",
+					Description: "Message to send",
+					Required:    true,
+				},
+			},
+		},
+	}
+)
+
 func main() {
 	// load configuration
 	cfg := readConfig()
@@ -60,23 +78,14 @@ func main() {
 		log.Fatalf("couldn't get app id: %v", err)
 	}
 
-	// create application commands
-	_, err = discord.ApplicationCommandCreate(app.ID, "", &discordgo.ApplicationCommand{
-		Name:         handler.ApplicationCommandChat,
-		Description:  "Create a new thread for conversation.",
-		DMPermission: ref.Of(true),
-		Options: []*discordgo.ApplicationCommandOption{
-			{
-				Type:        discordgo.ApplicationCommandOptionString,
-				Name:        "messages",
-				Description: "Message to send",
-				Required:    true,
-			},
-		},
-	})
-
-	if err != nil {
-		log.Fatalf("couldn't create chat command: %v", err)
+	log.Println("adding commands...")
+	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
+	for i, v := range commands {
+		cmd, err := discord.ApplicationCommandCreate(app.ID, "", v)
+		if err != nil {
+			log.Panicf("cannot create '%v' command: %v", v.Name, err)
+		}
+		registeredCommands[i] = cmd
 	}
 
 	// configure discord handler
@@ -91,6 +100,7 @@ func main() {
 		log.Fatalf("error opening connection: %v", err)
 		return
 	}
+	defer discord.Close()
 
 	// show bot invite url
 	botInviteURL := fmt.Sprintf("https://discord.com/api/oauth2/authorize?client_id=%s&permissions=%s&scope=%s",
@@ -98,11 +108,19 @@ func main() {
 	log.Infof("invite bot to your server: %s", botInviteURL)
 
 	// wait here until ctrl-c or other term signal is received.
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
 	log.Info("bot is now running. press ctrl-c to exit.")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
-	<-sc
+	<-stop
 
-	// cleanly close down the discord session.
-	discord.Close()
+	// remove commands
+	log.Println("removing commands...")
+	for _, v := range registeredCommands {
+		err = discord.ApplicationCommandDelete(app.ID, "", v.ID)
+		if err != nil {
+			log.Panicf("cannot delete '%v' command: %v", v.Name, err)
+		}
+	}
+
+	log.Println("bot is now exiting. bye!")
 }
