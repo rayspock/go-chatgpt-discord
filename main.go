@@ -79,13 +79,11 @@ func main() {
 	}
 
 	log.Println("adding commands...")
-	registeredCommands := make([]*discordgo.ApplicationCommand, len(commands))
-	for i, v := range commands {
-		cmd, err := discord.ApplicationCommandCreate(app.ID, "", v)
+	for _, v := range commands {
+		_, err = discord.ApplicationCommandCreate(app.ID, "", v)
 		if err != nil {
 			log.Panicf("cannot create '%v' command: %v", v.Name, err)
 		}
-		registeredCommands[i] = cmd
 	}
 
 	// configure discord handler
@@ -115,6 +113,10 @@ func main() {
 
 	// remove commands
 	log.Println("removing commands...")
+	registeredCommands, err := discord.ApplicationCommands(app.ID, "")
+	if err != nil {
+		log.Panicf("cannot get registered commands: %v", err)
+	}
 	for _, v := range registeredCommands {
 		err = discord.ApplicationCommandDelete(app.ID, "", v.ID)
 		if err != nil {
