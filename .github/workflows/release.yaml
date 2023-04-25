@@ -27,14 +27,15 @@ jobs:
           } >> "$GITHUB_ENV"
       - name: OS darwin
         if: matrix.goos == 'darwin'
-        run: echo "OS_NAME=macOS" >> "$GITHUB_ENV"
+        run: echo "OS_NAME=mac" >> "$GITHUB_ENV"
       - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          goos: ${{ matrix.goos }}
-          goarch: ${{ matrix.goarch }}
-          goversion: "https://dl.google.com/go/go1.20.3.linux-amd64.tar.gz"
-          extra_files: LICENSE.txt README.md .env.example
           md5sum: false
           build_command: make
+          goos: ${{ matrix.goos }}
+          goarch: ${{ matrix.goarch }}
+          goversion: "go.mod"
+          extra_files: LICENSE.txt README.md .env.example
+          asset_name: "${{ env.REPOSITORY_NAME }}-${{ env.RELEASE_TAG }}-${{ env.OS_NAME }}-${{ matrix.goarch }}"
