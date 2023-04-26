@@ -66,21 +66,21 @@ func main() {
 	setup.ConfigureLogger(cfg.logConfig)
 
 	// create a new Discord session using the provided bot token.
-	discord, err := discordgo.New("Bot " + cfg.botToken)
+	dg, err := discordgo.New("Bot " + cfg.botToken)
 	if err != nil {
 		log.Fatalf("error creating discord session: %v", err)
 		return
 	}
 
 	// get app id
-	app, err := discord.Application("@me")
+	app, err := dg.Application("@me")
 	if err != nil {
 		log.Fatalf("couldn't get app id: %v", err)
 	}
 
 	log.Println("adding commands...")
 	for _, v := range commands {
-		_, err = discord.ApplicationCommandCreate(app.ID, "", v)
+		_, err = dg.ApplicationCommandCreate(app.ID, "", v)
 		if err != nil {
 			log.Panicf("cannot create '%v' command: %v", v.Name, err)
 		}
@@ -89,16 +89,16 @@ func main() {
 	// configure discord handler
 	chatGPTService := provider.NewChatGPTService(cfg.openaiAPIKey, cfg.openaiModel)
 	discordHandler := handler.NewDiscordHandler(chatGPTService)
-	discord.AddHandler(discordHandler.GetInteractionCreateHandler())
-	discord.AddHandler(discordHandler.GetMessageCreateHandler())
+	dg.AddHandler(discordHandler.GetInteractionCreateHandler())
+	dg.AddHandler(discordHandler.GetMessageCreateHandler())
 
 	// open a websocket connection to discord and begin listening.
-	err = discord.Open()
+	err = dg.Open()
 	if err != nil {
 		log.Fatalf("error opening connection: %v", err)
 		return
 	}
-	defer discord.Close()
+	defer dg.Close()
 
 	// show bot invite url
 	botInviteURL := fmt.Sprintf("https://discord.com/api/oauth2/authorize?client_id=%s&permissions=%s&scope=%s",
@@ -113,12 +113,12 @@ func main() {
 
 	// remove commands
 	log.Println("removing commands...")
-	registeredCommands, err := discord.ApplicationCommands(app.ID, "")
+	registeredCommands, err := dg.ApplicationCommands(app.ID, "")
 	if err != nil {
 		log.Panicf("cannot get registered commands: %v", err)
 	}
 	for _, v := range registeredCommands {
-		err = discord.ApplicationCommandDelete(app.ID, "", v.ID)
+		err = dg.ApplicationCommandDelete(app.ID, "", v.ID)
 		if err != nil {
 			log.Panicf("cannot delete '%v' command: %v", v.Name, err)
 		}
