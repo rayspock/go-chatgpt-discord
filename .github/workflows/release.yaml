@@ -42,4 +42,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "go.mod"
           extra_files: LICENSE.txt README.md .env.example
-          asset_name: "${{ env.REPOSITORY_NAME }}-${{ env.RELEASE_TAG }}-${{ env.OS_NAME }}-${{ env.ARCH_NAME }}"
+          asset_name: "${{ env.REPOSITORY_NAME }}_${{ env.RELEASE_TAG }}_${{ env.OS_NAME }}_${{ env.ARCH_NAME }}"
