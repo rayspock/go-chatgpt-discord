@@ -121,7 +121,7 @@ func (h *DiscordHandler) GetMessageCreateHandler() func(s *discordgo.Session, m 
 			return
 		}
 
-		// Ignore all messages about interactions
+		// Ignore all messages about interactions as we handle them in GetInteractionCreateHandler
 		if m.Interaction != nil && m.Interaction.ID != "" {
 			return
 		}
