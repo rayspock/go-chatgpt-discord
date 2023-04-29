@@ -90,6 +90,7 @@ func main() {
 	chatGPTService := provider.NewChatGPTService(cfg.openaiAPIKey, cfg.openaiModel)
 	discordHandler := handler.NewDiscordHandler(chatGPTService)
 	dg.AddHandler(discordHandler.GetInteractionCreateHandler())
+	// add direct message handler
 	dg.AddHandler(discordHandler.GetMessageCreateHandler())
 
 	// open a websocket connection to discord and begin listening.
