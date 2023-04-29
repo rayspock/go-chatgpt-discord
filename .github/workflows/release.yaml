@@ -23,11 +23,15 @@ jobs:
           {
           echo "RELEASE_TAG=${GITHUB_REF/refs\/tags\//}"
           echo "REPOSITORY_NAME=${GITHUB_REPOSITORY#*/}"
+          echo "ARCH_NAME=${{ matrix.goarch }}"
           echo "OS_NAME=${{ matrix.goos }}"
           } >> "$GITHUB_ENV"
       - name: OS darwin
         if: matrix.goos == 'darwin'
-        run: echo "OS_NAME=mac" >> "$GITHUB_ENV"
+        run: echo "OS_NAME=osx" >> "$GITHUB_ENV"
+      - name: Arch amd64
+        if: matrix.goarch == 'amd64'
+        run: echo "ARCH_NAME=x86_64" >> "$GITHUB_ENV"
       - uses: actions/checkout@v3
       - uses: wangyoucao577/go-release-action@v1
         with:
@@ -38,4 +42,4 @@ jobs:
           goarch: ${{ matrix.goarch }}
           goversion: "go.mod"
           extra_files: LICENSE.txt README.md .env.example
-          asset_name: "${{ env.REPOSITORY_NAME }}-${{ env.RELEASE_TAG }}-${{ env.OS_NAME }}-${{ matrix.goarch }}"
+          asset_name: "${{ env.REPOSITORY_NAME }}-${{ env.RELEASE_TAG }}-${{ env.OS_NAME }}-${{ env.ARCH_NAME }}"
