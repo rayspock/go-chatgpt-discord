@@ -26,7 +26,7 @@ To run this bot, please follow these steps:
 
 1. Go to the [releases page](https://github.com/rayspock/go-chatgpt-discord/releases) and download the binary that
    matches your operating system. Extract the binary to a directory of your choice (such as `~/go-chatgpt-discord`).
-1. In the same directory as the binary, create a copy of .env.example and name it .env. Fill in the appropriate
+1. In the same directory as the binary, create a copy of `env.example` and name it `.env` Fill in the appropriate
    credentials as directed.
 1. Obtain a new OpenAI API key by following the link [here](https://platform.openai.com/account/api-keys). Then, fill
    in `OPENAI_API_KEY`.
