@@ -2,6 +2,10 @@
 
 Discord bot written in Golang that interacts with the ChatGPT API.
 
+![go-chatgpt-discord-slash-command-demo](https://github.com/rayspock/go-chatgpt-discord/assets/19812545/28bc4608-871f-4477-bbb4-fcfbbdbe9a27)
+
+![go-chatgpt-discord-direct-message-demo](https://github.com/rayspock/go-chatgpt-discord/assets/19812545/9e2b17bc-b104-4250-87e2-7f5b5886711d)
+
 ## Table of Contents
 
 - [Features](#features)
