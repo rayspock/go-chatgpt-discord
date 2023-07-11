@@ -1,4 +1,4 @@
-# GPT Discord Bot
+# ChatGPT Discord Bot
 
 Discord bot written in Golang that interacts with the ChatGPT API.
 
