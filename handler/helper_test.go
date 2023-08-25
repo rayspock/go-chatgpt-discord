@@ -32,6 +32,16 @@ func TestSendMessageByChunk(t *testing.T) {
 			chunkLength:    2,
 			expectedChunks: []string{"¡H", "ol", "a ", "Mu", "nd", "o!"},
 		},
+		"english with word delimiter": {
+			message:        "Hey there, how are you doing?",
+			chunkLength:    11,
+			expectedChunks: []string{"Hey there, ", "how are you", " doing?"},
+		},
+		"mandarin with word delimiter": {
+			message:        "哈囉，你過得好嗎？",
+			chunkLength:    4,
+			expectedChunks: []string{"哈囉，你", "過得好嗎", "？"},
+		},
 	}
 
 	for name, tc := range testCases {
