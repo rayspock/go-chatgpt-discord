@@ -209,11 +209,11 @@ func (h *DiscordHandler) handleDirectMessage(s *discordgo.Session, m *discordgo.
 	// Use to keep track of the last message id sent to the user, to edit the message instead of sending a new one
 	var msgID string
 	// A buffer string to store the last completion
-	var lastCompletion string
-	var width int
+	var chunkToRead string
+	var readChunkLength int
 	const (
-		// Discord has a limit of 2000 characters per message
-		maxContentLengthPerMessage = 2000
+		// Discord has a limit of 2000 characters per chunk of message
+		maxContentLengthPerChunk = 2000
 		// The interval of characters to send a message, to keep the user posted on the progress
 		intervalOfCharacters = 100
 	)
@@ -222,38 +222,40 @@ func (h *DiscordHandler) handleDirectMessage(s *discordgo.Session, m *discordgo.
 		if len(resp.Choices) <= 0 {
 			continue
 		}
-		content := resp.Choices[0].Delta.Content
-		if content == "" {
+		incomingContent := resp.Choices[0].Delta.Content
+		if incomingContent == "" {
 			continue
 		}
 
 		// If the message is too long, split it into multiple messages
-		lastCompletion += content
-		for i, w := width, 0; i < len(lastCompletion); i += w {
-			_, w = utf8.DecodeRuneInString(lastCompletion[i:])
-			width += w
-			if width > maxContentLengthPerMessage {
-				sendMessage(msgID, lastCompletion[:i])
-				lastCompletion = lastCompletion[i:]
+		chunkToRead += incomingContent
+		for i, w := readChunkLength, 0; i < len(chunkToRead); i += w {
+			_, w = utf8.DecodeRuneInString(chunkToRead[i:])
+			readChunkLength += w
+			if readChunkLength > maxContentLengthPerChunk {
+				sendMessage(msgID, chunkToRead[:i])
+				// Update the chunkToRead to the rest of the completion that hasn't been sent to the user.
+				chunkToRead = chunkToRead[i:]
 				// Reset the message id, so that the next message is sent as a new message
 				msgID = ""
-				// Reset the width, so that the next message is sent from the beginning
-				width = 0
+				// Reset the readChunkLength, so that the next message is sent from the beginning
+				readChunkLength = 0
 				// Send typing indicator
 				channelTyping()
 				break
 			}
-			// Send a message every intervalOfCharacters characters
-			if width%intervalOfCharacters == 0 {
-				msgID = sendMessage(msgID, lastCompletion[:i+w])
+			// Send a message every intervalOfCharacters characters to keep the user posted on the progress
+			if readChunkLength%intervalOfCharacters == 0 {
+				// Send current message read so far to the user
+				msgID = sendMessage(msgID, chunkToRead[:i+w])
 				// Send typing indicator
 				channelTyping()
 			}
 		}
 	}
-	// Make sure the last bit of the message is sent
-	if lastCompletion != "" {
-		sendMessage(msgID, lastCompletion)
+	// Make sure the last bit of the message chunk is sent.
+	if chunkToRead != "" {
+		sendMessage(msgID, chunkToRead)
 	}
 
 }
