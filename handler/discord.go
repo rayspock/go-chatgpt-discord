@@ -229,13 +229,18 @@ func (h *DiscordHandler) handleDirectMessage(s *discordgo.Session, m *discordgo.
 
 		// If the message is too long, split it into multiple messages
 		chunkToRead += incomingContent
+		prevWordDividerIndex := -1
 		for i, w := readChunkLength, 0; i < len(chunkToRead); i += w {
-			_, w = utf8.DecodeRuneInString(chunkToRead[i:])
-			readChunkLength += w
+			char, width := utf8.DecodeRuneInString(chunkToRead[i:])
+			w = width
+			readChunkLength += width
 			if readChunkLength > maxContentLengthPerChunk {
-				sendMessage(msgID, chunkToRead[:i])
-				// Update the chunkToRead to the rest of the completion that hasn't been sent to the user.
-				chunkToRead = chunkToRead[i:]
+				// Calculate the ending index of the chunk to send to prevent splitting words(only if there is a previous word divider)
+				chunkEndingIdx := h.getChunkEndingIndex(prevWordDividerIndex, i, char)
+				// Send current message read until the previous word divider(if any) to the user
+				sendMessage(msgID, chunkToRead[:chunkEndingIdx])
+				// Remove the sent message from the buffer
+				chunkToRead = chunkToRead[chunkEndingIdx:]
 				// Reset the message id, so that the next message is sent as a new message
 				msgID = ""
 				// Reset the readChunkLength, so that the next message is sent from the beginning
@@ -243,6 +248,9 @@ func (h *DiscordHandler) handleDirectMessage(s *discordgo.Session, m *discordgo.
 				// Send typing indicator
 				channelTyping()
 				break
+			}
+			if IsWordDivider(char) {
+				prevWordDividerIndex = i
 			}
 			// Send a message every intervalOfCharacters characters to keep the user posted on the progress
 			if readChunkLength%intervalOfCharacters == 0 {
@@ -258,4 +266,13 @@ func (h *DiscordHandler) handleDirectMessage(s *discordgo.Session, m *discordgo.
 		sendMessage(msgID, chunkToRead)
 	}
 
+}
+
+func (h *DiscordHandler) getChunkEndingIndex(prevWordDividerIdx, currentIdx int, currentChar rune) int {
+	// if previous and current read characters are not word dividers
+	if prevWordDividerIdx != -1 && prevWordDividerIdx != currentIdx-1 && !IsWordDivider(currentChar) {
+		// return the next index of the previous word divider
+		return prevWordDividerIdx + 1
+	}
+	return currentIdx
 }
