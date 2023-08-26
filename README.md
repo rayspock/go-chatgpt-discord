@@ -1,3 +1,6 @@
+
+[![GitHub Release](https://img.shields.io/github/release/rayspock/go-chatgpt-discord.svg?style=flat)]()
+[![Github All Releases](https://img.shields.io/github/downloads/rayspock/go-chatgpt-discord/total.svg?style=flat)]() 
 # ChatGPT Discord Bot
 
 Discord bot written in Golang that interacts with the ChatGPT API.
