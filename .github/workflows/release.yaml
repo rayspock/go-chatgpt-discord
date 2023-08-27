@@ -40,6 +40,6 @@ jobs:
           build_command: make
           goos: ${{ matrix.goos }}
           goarch: ${{ matrix.goarch }}
-          goversion: "go.mod"
+          goversion: 1.21.0
           extra_files: LICENSE README.md env.example
           asset_name: "${{ env.REPOSITORY_NAME }}_${{ env.RELEASE_TAG }}_${{ env.OS_NAME }}_${{ env.ARCH_NAME }}"
