@@ -57,7 +57,7 @@ func (s *chatGPTServiceImpl) CreateChatCompletionStream(ctx context.Context,
 				Delta: ChatCompletionStreamChoiceDelta{
 					Content: choice.Delta.Content,
 				},
-				FinishReason: choice.FinishReason,
+				FinishReason: string(choice.FinishReason),
 			})
 		}
 		if len(choices) > 0 {
